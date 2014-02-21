@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html class="no-js">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <style>
+
+          del {
+            font-weight: bold;
+          }
+          ins {
+            font-weight: bold;
+          }
+        </style>
+        <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="css/main.css">
+
+        <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
+    </head>
+    <body>
+
+    <div class="container">
+
+    <h1>ramseyer.js</h1>
+    <form class="form-inline" role="form">
+      <div class="form-group">
+        <label class="sr-only" for="sectionGetter">Get a section of the Code</label>
+        <input type="search" class="form-control" id="sectionGetter" placeholder="Get a section">
+      </div>
+      <button class="btn btn-default" id="sectionGetterBtn">Go</button>
+    </form>
+
+    <div class="row">
+    <div class="col-md-6" ><h2>Original Provision</h2>
+    <textarea id="original" style="width: 90%; height: 20em"}></textarea></div>
+    <div class="col-md-6" ><h2>New Provision</h2><textarea id="new" style="width: 90%; height: 20em"></textarea></div>
+    </div>
+    <div class="form-group">
+    <button id="diff" class="btn btn-default" onclick="differ()">Go</button>
+    </div>
+    <div class="row">
+    <h2>Ramseyer</h2>
+    <div class="col-md-12" id="ramseyer"></div>
+    </div>
+    </div> <!-- /container -->        
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.10.1.min.js"><\/script>')</script>
+
+        <script src="js/vendor/bootstrap.min.js"></script>
+
+        <script src="js/main.js"></script>
+        <script src="js/vendor/diff.js"></script>
+        <script type="text/javascript">
+
+        $("#sectionGetterBtn").click(function(evt) {
+          evt.preventDefault();
+          var s = $("#sectionGetter").val();
+          var p = s.indexOf("-");
+          if (p == -1) {
+            alert("Search by citation, such as §50-102.");
+            return false;
+          }
+          title = s.substring(0, p);
+          sec = s.substring(p+1);
+
+          var oReq = new XMLHttpRequest();
+
+          var url = "http://dccode.org/dccode/by_title/" + title + ".json";
+          oReq.open("GET", url, true);
+          oReq.send();
+
+          oReq.onload = function() {
+            alert("hi!");
+//                    var title_shard = JSON.parse(this.responseText);
+//                    if (!(sec in title_shard["sec"])) {
+//                        alert("Citation not found.")
+ //                       return false;
+ //                   }
+  //                  console.log("/dccode/" + title_shard["sec"][sec]);
+          };
+        });
+
+        function differ () {
+          var diff = JsDiff.diffWords($("#original").val(), $("#new").val());
+          console.log(diff);
+          diff.forEach(function(part){
+            var etype = part.added ? 'ins' : part.removed ? 'del' : 'span';
+            var elem = document.createElement(etype);
+            var evalue = (etype == 'span' ? part.value : '[' + part.value + ']');
+            elem.appendChild(document.createTextNode(evalue));
+            ramseyer.appendChild(elem);
+          });
+        }
+/*        function differ () {
+          var dmp = new diff_match_patch();
+          var diff = dmp.diff_main($("#original").val(), $("#new").val());
+          var cleandiff = dmp.diff_cleanupSemantic(diff);
+          $("#ramseyer").html(dmp.diff_prettyHtml(diff));
+        }
+*/
+        </script>
+    </body>
+</html>
