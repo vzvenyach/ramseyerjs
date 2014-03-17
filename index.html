@@ -80,7 +80,7 @@
 
         $.ajaxSetup({
             headers: {
-                'Accept': 'application/vnd.github.v3.raw+json',
+                'Accept': 'application/vnd.github.v3.raw',
             }
         });
 
@@ -91,12 +91,9 @@
                 return false;
             }
             section_xml = title_shard["sec"][sec];
-            $.getJSON("https://api.github.com/repos/openlawdc/dccode/contents/" + section_xml + '?ref=gh-pages'),
-            function(x) {
-                var section = x;
-                console.log("hello?");
-                console.log(section);
-            };
+            $.getJSON("https://api.github.com/repos/openlawdc/dccode/contents/" + section_xml + '?ref=gh-pages', function (x) {
+                console.log(x);
+            });
         });
     });
 
