@@ -34,25 +34,20 @@
                 <input type="search" class="form-control" id="sectionGetter" placeholder="Get a section">
             </div>
             <button class="btn btn-default" id="sectionGetterBtn">Go</button>
+            <button class="btn btn-default" id="differBtn">Differ</button>
         </form>
         <div class="form-group">
             <div class="row">
                 <div class="col-md-6">
                     <h2>Original Provision</h2>
-                    <textarea id="original" style="width: 90%; height: 20em" }></textarea>
+                    <div id="original" class="sectioncontainer" contenteditable="true" style="width: 90%; height: 20em; word-wrap: break-word;"></div>
                 </div>
                 <div class="col-md-6">
                     <h2>New Provision</h2>
-                    <textarea id="new" style="width: 90%; height: 20em"></textarea>
+                    <div id="new" class="sectioncontainer" contenteditable="true" style="width: 90%; height: 20em; word-wrap: break-word;"></div>
                 </div>
             </div>
-            <div class="form-group">
-                <button id="diff" class="btn btn-default" onclick="differ()">Go</button>
-            </div>
-        </div>
-        <div class="row">
-            <h2>Ramseyer</h2>
-            <div class="col-md-12" id="ramseyer"></div>
+
         </div>
     </div>
     <!-- /container -->
@@ -66,17 +61,26 @@
     <script src="js/main.js"></script>
     <script src="js/vendor/diff.js"></script>
     <script type="text/javascript">
+    function htmlEscape(str) {
+        return String(str)
+            .replace(/&amp;/g, '&')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>');
+    }
+
     $("#sectionGetterBtn").click(function(evt) {
         evt.preventDefault();
+        $(".sectioncontainer").html("");
         var s = $("#sectionGetter").val();
         var p = s.indexOf("-");
         if (p == -1) {
-            alert("Search by citation, such as §50-102.");
+            alert("Search by citation, such as 50-102.");
             return false;
         }
         title = s.substring(0, p);
         sec = s.substring(p + 1);
-        console.log("This function doesn't work yet.");
 
         $.ajaxSetup({
             headers: {
@@ -84,36 +88,31 @@
             }
         });
 
-        $.getJSON('https://api.github.com/repos/openlawdc/dccode/contents/by_title/1.json', function(d) {
+        $.getJSON('https://api.github.com/repos/openlawdc/dccode/contents/by_title/' + title + '.json', function(d) {
             var title_shard = d;
             if (!(sec in title_shard["sec"])) {
                 alert("Citation not found.")
                 return false;
             }
             section_xml = title_shard["sec"][sec];
-            $.getJSON("https://api.github.com/repos/openlawdc/dccode/contents/" + section_xml + '?ref=gh-pages', function (x) {
-                console.log(x);
+            section_url = section_xml.replace('xml', 'html');
+            $.get("https://api.github.com/repos/openlawdc/dccode/contents/" + section_url + '?ref=gh-pages', function(x) {
+                section = $("#content > *[class!=annotations]", x);
+                $(section).appendTo(".sectioncontainer");
             });
         });
     });
 
-    function differ() {
-        var diff = JsDiff.diffWords($("#original").val(), $("#new").val());
-        diff.forEach(function(part) {
-            var etype = part.added ? 'ins' : part.removed ? 'del' : 'span';
-            var elem = document.createElement(etype);
-            var evalue = part.value;
-            elem.appendChild(document.createTextNode(evalue));
-            ramseyer.appendChild(elem);
-        });
-    }
-    /*        function differ () {
-          var dmp = new diff_match_patch();
-          var diff = dmp.diff_main($("#original").val(), $("#new").val());
-          var cleandiff = dmp.diff_cleanupSemantic(diff);
-          $("#ramseyer").html(dmp.diff_prettyHtml(diff));
-        }
-*/
+    $("#differBtn").click(function(evt) {
+        evt.preventDefault();
+        var diff = JsDiff.diffWords($("#original").html(), $("#new").html());
+        console.log(JsDiff.convertChangesToXML(diff));
+        var html_array = [];
+        var w = window.open();
+        w.document.open("text/html", "replace");
+        w.document.write("<HTML><HEAD><STYLE>del {font-weight: bold; } ins {font-weight: bold; }</STYLE><TITLE>Ramseyer</TITLE></HEAD><BODY>" + htmlEscape(JsDiff.convertChangesToXML(diff)) + "</BODY></HTML>");
+        w.document.close();
+    });
     </script>
 </body>
 
